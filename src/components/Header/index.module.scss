@@ -1,0 +1,25 @@
+.searchContainer {
+  display: inline-block;
+  margin: 0.75rem 0.5rem;
+  border-radius: 2rem;
+  overflow: hidden;
+
+  &:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  .input {
+    padding: 1rem;
+    width: calc(100vw - 10rem);
+    max-width: 40rem;
+    height: 3.5rem;
+    outline: none;
+    vertical-align: middle;
+  }
+
+  .search {
+    padding: 0.75rem;
+    height: 3.5rem;
+    vertical-align: middle;
+  }
+}

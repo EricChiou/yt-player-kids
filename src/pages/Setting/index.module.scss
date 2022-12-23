@@ -1,0 +1,48 @@
+.animation {
+  animation: shaking 3s infinite;
+}
+
+.animationReverse {
+  width: 30vw;
+  transform: rotate(5deg);
+  animation: shaking 3s infinite 1s;
+}
+
+@keyframes shaking {
+  0% {
+    width: 30vw;
+    transform: rotate(5deg);
+  }
+
+  50% {
+    width: 35vw;
+    transform: rotate(-10deg);
+  }
+
+  100% {
+    width: 30vw;
+    transform: rotate(5deg);
+  }
+}
+
+.slider {
+  -webkit-appearance: none;
+  width: 20rem;
+  height: 0.5rem;
+  border-radius: 0.25rem;
+  background-color: #eee;
+
+  &::-webkit-slider-thumb {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  &::-moz-range-thumb {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+}
