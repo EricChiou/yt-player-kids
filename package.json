@@ -6,7 +6,7 @@
   "scripts": {
     "start": "vite --port=2600",
     "dev": "vite --port=2600",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build --base=/yt-player-kids/",
     "preview": "vite preview"
   },
   "dependencies": {
