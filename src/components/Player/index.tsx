@@ -39,7 +39,9 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
 
   function initYTPlayer() {
     const yt = (window as any).YT;
+    console.log('11111', yt);
     if (yt) {
+      console.log('11111 22222', ytPlayerID);
       ytPlayer.current = new yt.Player(ytPlayerID, {
         width: '100%',
         height: '100%',
