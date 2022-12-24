@@ -26,7 +26,7 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
   const [volume, setVolume] = useState(100);
   const [isFullScreen, setIsFullScreen] = useState(true);
 
-  useEffect(() => initYTPlayer, []);
+  useEffect(() => initYTPlayer(0), []);
 
   useEffect(() => {
     const progressInterval = setInterval(() => {
@@ -37,11 +37,9 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
     return () => clearInterval(progressInterval);
   }, []);
 
-  function initYTPlayer() {
+  function initYTPlayer(count: number) {
     const yt = (window as any).YT;
-    console.log('11111', yt);
     if (yt) {
-      console.log('11111 22222', ytPlayerID);
       ytPlayer.current = new yt.Player(ytPlayerID, {
         width: '100%',
         height: '100%',
@@ -58,6 +56,8 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
         },
         events: { onReady, onStateChange },
       });
+    } else {
+      if (count < 3) { setTimeout(() => initYTPlayer(count + 1), 500); }
     }
   }
 
@@ -70,7 +70,7 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
     if (e.data === 0) {
       setPlayerStatus('pause');
       currentVideoIndex.current = videos[currentVideoIndex.current + 1] ? (currentVideoIndex.current + 1) : 0;
-      ytPlayer.current ? ytPlayer.current.loadVideoById(videos[currentVideoIndex.current].id) : initYTPlayer();
+      ytPlayer.current ? ytPlayer.current.loadVideoById(videos[currentVideoIndex.current].id) : initYTPlayer(0);
 
       if (currentVideoIndex.current === (videos.length - 1)) { loadMore(); }
     }
