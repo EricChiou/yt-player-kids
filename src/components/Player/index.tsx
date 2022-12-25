@@ -18,24 +18,60 @@ interface Props {
 }
 
 const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, back }) => {
+  const ytPlayerContainerID = 'yt-player-container';
   const ytPlayerID = 'yt-player';
   const ytPlayer = useRef<any | null>(null);
   const currentVideoIndex = useRef(startVideoIndex);
   const [playerStatus, setPlayerStatus] = useState<'play' | 'pause'>('pause');
   const [progress, setProgress] = useState(0);
   const [volume, setVolume] = useState(100);
-  const [isFullScreen, setIsFullScreen] = useState(true);
+  const [isExpandScreen, setIsExpandScreen] = useState(true);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
-  useEffect(() => initYTPlayer(0), []);
+  useEffect(() => {
+    initYTPlayer(0);
+    const fullScreenEvent = () => { setIsFullScreen((preValue) => !preValue); };
+    document.addEventListener('fullscreenchange', fullScreenEvent);
+    requestFullscreen();
+
+    return () => document.removeEventListener('fullscreenchange', fullScreenEvent);
+  }, []);
 
   useEffect(() => {
     const progressInterval = setInterval(() => {
-      if (!ytPlayer.current) { return; }
+      if (!ytPlayer.current?.getCurrentTime) { return; }
       setProgress(Math.round((ytPlayer.current.getCurrentTime() / ytPlayer.current.getDuration()) * 100));
     }, 1000);
 
     return () => clearInterval(progressInterval);
   }, []);
+
+  function requestFullscreen() {
+    const container = document.getElementById(ytPlayerContainerID);
+    if (container) {
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      } else if ((container as any).msRequestFullscreen) {
+        (container as any).msRequestFullscreen();
+      } else if ((container as any).mozRequestFullScreen) {
+        (container as any).mozRequestFullScreen();
+      } else if ((container as any).webkitRequestFullscreen) {
+        (container as any).webkitRequestFullscreen();
+      }
+    }
+  }
+
+  function exitFullscreen() {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if ((document as any).msExitFullscreen) {
+      (document as any).msExitFullscreen();
+    } else if ((document as any).mozCancelFullScreen) {
+      (document as any).mozCancelFullScreen();
+    } else if ((document as any).webkitExitFullscreen) {
+      (document as any).webkitExitFullscreen();
+    }
+  }
 
   function initYTPlayer(count: number) {
     const yt = (window as any).YT;
@@ -62,15 +98,21 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
   }
 
   function onReady() {
-    ytPlayer.current.loadVideoById(videos[currentVideoIndex.current].id);
-    setVolume(ytPlayer.current.getVolume());
+    if (ytPlayer.current?.loadVideoById) {
+      ytPlayer.current.loadVideoById(videos[currentVideoIndex.current].id);
+      setVolume(ytPlayer.current.getVolume());
+    } else {
+      initYTPlayer(0);
+    }
   }
 
   function onStateChange(e: any) {
     if (e.data === 0) {
       setPlayerStatus('pause');
       currentVideoIndex.current = videos[currentVideoIndex.current + 1] ? (currentVideoIndex.current + 1) : 0;
-      ytPlayer.current ? ytPlayer.current.loadVideoById(videos[currentVideoIndex.current].id) : initYTPlayer(0);
+      ytPlayer.current?.loadVideoById ?
+        ytPlayer.current.loadVideoById(videos[currentVideoIndex.current].id) :
+        initYTPlayer(0);
 
       if (currentVideoIndex.current === (videos.length - 1)) { loadMore(); }
     }
@@ -100,19 +142,23 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
   }
 
   function loadVideo(index: number) {
-    ytPlayer.current.loadVideoById(videos[index].id);
-    currentVideoIndex.current = index;
+    if (ytPlayer.current?.loadVideoById) {
+      ytPlayer.current.loadVideoById(videos[index].id);
+      currentVideoIndex.current = index;
+    } else {
+      initYTPlayer(0);
+    }
   }
 
   return (<>
-    <div className={`${styles.container} bg-black-deep`}>
-      <div className={isFullScreen ? styles.fullScreenPlayer : styles.player}>
+    <div id={ytPlayerContainerID} className={`${styles.container} bg-black-deep`}>
+      <div className={isExpandScreen ? styles.fullScreenPlayer : styles.player}>
         <div id={ytPlayerID}></div>
       </div>
       <div className={styles.mask}>
         <div
-          className={isFullScreen ? styles.fullScreenPlayerArea : styles.playerArea}
-          onClick={() => setIsFullScreen(!isFullScreen)}
+          className={isExpandScreen ? styles.fullScreenPlayerArea : styles.playerArea}
+          onClick={() => setIsExpandScreen(!isExpandScreen)}
         >
           <div
             className={`${styles.back} text-white hover:bg-black`}
@@ -133,6 +179,17 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
               onChange={progressInputOnChange}
             ></input>
           </div>
+          {isExpandScreen ?
+            <div
+              className={`${styles.fullScreen} text-white`}
+              onClick={(e) => {
+                e.stopPropagation();
+                isFullScreen ? exitFullscreen() : requestFullscreen();
+              }}
+            >
+              {isFullScreen ? 'exit' : 'request'} full screen
+            </div> : null
+          }
         </div>
         <div className={`${styles.controller} text-white`} onClick={(e) => e.stopPropagation()}>
           <div
