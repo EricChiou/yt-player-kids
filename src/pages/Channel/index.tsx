@@ -43,7 +43,10 @@ const Channel: React.FC = () => {
     setLoading(true);
     VideoAPI.GetVideosByIDs(ids)
       .then((resp) => {
-        setVideos((preVideos) => [...preVideos, ...resp.data.items.filter((item) => item.status.madeForKids)]);
+        setVideos((preVideos) => [
+          ...preVideos,
+          ...resp.data.items.filter((item) => item.status.madeForKids && !preVideos.some((v) => v.id === item.id)),
+        ]);
       })
       .finally(() => setLoading(false));
   }

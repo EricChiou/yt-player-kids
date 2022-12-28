@@ -1,11 +1,15 @@
 import React, { ChangeEvent, useEffect, useRef, useState, UIEvent } from 'react';
 
 import { Video } from '@/api/interface/video';
+
+import System from '@/store/system';
 import Loading from '@/icon/Loading';
 import Play from '@/icon/Play';
 import Pause from '@/icon/Pause';
 import Volume from '@/icon/Volume';
 import Back from '@/icon/Back';
+import FullScreen from '@/icon/FullScreen';
+import ExitFullScreen from '@/icon/ExitFullScreen';
 
 import styles from './index.module.scss';
 
@@ -74,33 +78,38 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
   }
 
   function initYTPlayer(count: number) {
+    if (ytPlayer.current) { return; }
+
     const yt = (window as any).YT;
-    if (yt) {
-      ytPlayer.current = new yt.Player(ytPlayerID, {
-        width: '100%',
-        height: '100%',
-        playerVars: {
-          autoplay: 1,
-          controls: 0,
-          showinfo: 0,
-          rel: 0,
-          ecver: 2,
-          modestbranding: 0,
-          fs: 0,
-          cc_load_policty: 0,
-          iv_load_policy: 3,
-        },
-        events: { onReady, onStateChange },
-      });
-    } else {
+    if (!yt) {
       if (count < 3) { setTimeout(() => initYTPlayer(count + 1), 500); }
+      return;
     }
+
+    ytPlayer.current = new yt.Player(ytPlayerID, {
+      width: '100%',
+      height: '100%',
+      playerVars: {
+        autoplay: 1,
+        controls: 0,
+        showinfo: 0,
+        rel: 0,
+        ecver: 2,
+        modestbranding: 0,
+        fs: 0,
+        cc_load_policty: 0,
+        iv_load_policy: 3,
+      },
+      events: { onReady, onStateChange },
+    });
   }
 
   function onReady() {
     if (ytPlayer.current?.loadVideoById) {
       ytPlayer.current.loadVideoById(videos[currentVideoIndex.current].id);
-      setVolume(ytPlayer.current.getVolume());
+      const system = System.Get();
+      ytPlayer.current.setVolume(system.volume);
+      setVolume(system.volume);
     } else {
       initYTPlayer(0);
     }
@@ -187,7 +196,7 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
                 isFullScreen ? exitFullscreen() : requestFullscreen();
               }}
             >
-              {isFullScreen ? 'exit' : 'request'} full screen
+              {isFullScreen ? <ExitFullScreen></ExitFullScreen> : <FullScreen></FullScreen>}
             </div> : null
           }
         </div>
@@ -199,7 +208,7 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
             {playerStatus === 'play' ? <Pause width="2rem" height="2rem"></Pause> : null}
             {playerStatus === 'pause' ? <Play width="2rem" height="2rem"></Play> : null}
           </div>
-          <div className="inline-block">
+          <div className="inline-block align-middle">
             <div className="inline-block align-middle">
               <Volume width="2rem" height="2rem"></Volume>
             </div>
@@ -210,13 +219,28 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
                 min="0"
                 max="100"
                 value={volume}
-                onChange={(e) => { ytPlayer.current?.setVolume?.(Number(e.target.value)); }}
+                onChange={(e) => {
+                  ytPlayer.current?.setVolume?.(Number(e.target.value));
+                  System.SetVolume(Number(e.target.value));
+                }}
               ></input>
             </div>
           </div>
+          <div
+            className="inline-block align-middle cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              isFullScreen ? exitFullscreen() : requestFullscreen();
+            }}
+          >
+            {isFullScreen ?
+              <ExitFullScreen width="2rem" height="2rem"></ExitFullScreen> :
+              <FullScreen width="2rem" height="2rem"></FullScreen>
+            }
+          </div>
         </div>
         <div className={`${styles.list}`} onScroll={listOnScroll}>
-          {videos.map((video, i) => (<>
+          {videos.map((video, i) => (
             <div
               key={video.id}
               className="inline-block mx-2 h-full cursor-pointer align-middle"
@@ -224,7 +248,7 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
             >
               <img className="h-full" src={video.snippet.thumbnails.medium.url}></img>
             </div>
-          </>))}
+          ))}
           {loading ?
             <div className="inline-block mx-2 text-red align-middle">
               <Loading width="3rem" height="3rem"></Loading>
