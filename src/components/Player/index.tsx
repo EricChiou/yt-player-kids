@@ -8,8 +8,6 @@ import Play from '@/icon/Play';
 import Pause from '@/icon/Pause';
 import Volume from '@/icon/Volume';
 import Back from '@/icon/Back';
-import FullScreen from '@/icon/FullScreen';
-import ExitFullScreen from '@/icon/ExitFullScreen';
 
 import styles from './index.module.scss';
 
@@ -29,7 +27,6 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
   const [playerStatus, setPlayerStatus] = useState<'play' | 'pause'>('pause');
   const [progress, setProgress] = useState(0);
   const [volume, setVolume] = useState(100);
-  const [isExpandScreen, setIsExpandScreen] = useState(true);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   useEffect(() => {
@@ -161,13 +158,13 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
 
   return (<>
     <div id={ytPlayerContainerID} className={`${styles.container} bg-black-deep`}>
-      <div className={isExpandScreen ? styles.fullScreenPlayer : styles.player}>
+      <div className={isFullScreen ? styles.fullScreenPlayer : styles.player}>
         <div id={ytPlayerID}></div>
       </div>
       <div className={styles.mask}>
         <div
-          className={isExpandScreen ? styles.fullScreenPlayerArea : styles.playerArea}
-          onClick={() => setIsExpandScreen(!isExpandScreen)}
+          className={isFullScreen ? styles.fullScreenPlayerArea : styles.playerArea}
+          onClick={() => { isFullScreen ? exitFullscreen() : requestFullscreen(); }}
         >
           <div
             className={`${styles.back} text-white hover:bg-black`}
@@ -188,17 +185,6 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
               onChange={progressInputOnChange}
             ></input>
           </div>
-          {isExpandScreen ?
-            <div
-              className={`${styles.fullScreen} text-white`}
-              onClick={(e) => {
-                e.stopPropagation();
-                isFullScreen ? exitFullscreen() : requestFullscreen();
-              }}
-            >
-              {isFullScreen ? <ExitFullScreen></ExitFullScreen> : <FullScreen></FullScreen>}
-            </div> : null
-          }
         </div>
         <div className={`${styles.controller} text-white`} onClick={(e) => e.stopPropagation()}>
           <div
@@ -222,21 +208,10 @@ const Player: React.FC<Props> = ({ loading, videos, startVideoIndex, loadMore, b
                 onChange={(e) => {
                   ytPlayer.current?.setVolume?.(Number(e.target.value));
                   System.SetVolume(Number(e.target.value));
+                  setVolume(Number(e.target.value));
                 }}
               ></input>
             </div>
-          </div>
-          <div
-            className="inline-block align-middle cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              isFullScreen ? exitFullscreen() : requestFullscreen();
-            }}
-          >
-            {isFullScreen ?
-              <ExitFullScreen width="2rem" height="2rem"></ExitFullScreen> :
-              <FullScreen width="2rem" height="2rem"></FullScreen>
-            }
           </div>
         </div>
         <div className={`${styles.list}`} onScroll={listOnScroll}>
